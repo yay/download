@@ -24,7 +24,7 @@ function* makeChunkUrlIterator(startIndex = 0) {
     let index = startIndex;
     while (true) {
         // const number = String(index).padStart(5, '0');
-        yield `https://.../${index}.ts`;
+        // yield `https://.../${index}.ts`;
         index++;
     }
 }
@@ -102,6 +102,51 @@ function concatFiles() {
     writeStream.close();
 }
 
-getFile(makeImageUrlIterator(1));
-// saveVideo(makeChunkUrlIterator(1));
+function savePartial(fileName = 'partial.ts') {
+    const writeStream = fs.createWriteStream(`${process.cwd()}/${fileName}`, {
+        encoding: 'binary',
+        flags: 'a'
+    });
+
+    console.log(`Saving stream to ${writeStream.path}`);
+
+    const url = 'https://p218.anyhentai.com/IDlXfFdVbV8AB3E=.mp4?st=nKsJZoouzi9kqPgCcwRyuA&e=1647555652';
+
+    (new Promise((resolve, reject) => {
+        const req = https.get(url, {
+            headers: {
+                'Accept': '*/*',
+                'Accept-Encoding': 'identity;q=1, *;q=0',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Connection': 'keep-alive',
+                'Range': 'bytes=0-',
+                'Referer': 'https://javhub.net/play/DOAFm-EhaB9I9J3zA2aiYaaum6iE-O3LPE2CMwBLz3M/mdl-318-disposable-m-slave-tsukasa-imai',
+                'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="99", "Google Chrome";v="99"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"macOS"',
+                'Sec-Fetch-Dest': 'video',
+                'Sec-Fetch-Mode': 'no-cors',
+                'Sec-Fetch-Site': 'cross-site',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36'
+            }
+        }, res => {
+            console.log('Status code:', res.statusCode);
+            res.pipe(writeStream);
+            res.on('end', () => {
+                console.log('Downloaded');
+                resolve(res);
+            });
+        });
+        req.on('error', error => reject(error));
+        req.end();
+    })).then(res => {
+        writeStream.close();
+    }).catch(reason => {
+        console.error(reason);
+    });
+}
+
+// getFile(makeImageUrlIterator(1));
+saveVideo(makeChunkUrlIterator(1));
+// savePartial();
 // concatFiles();
